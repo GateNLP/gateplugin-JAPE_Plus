@@ -25,6 +25,7 @@ import gate.creole.AbstractLanguageAnalyser;
 import gate.creole.ControllerAwarePR;
 import gate.creole.ExecutionException;
 import gate.creole.ResourceInstantiationException;
+import gate.creole.ResourceReference;
 import gate.creole.metadata.CreoleParameter;
 import gate.creole.metadata.CreoleResource;
 import gate.creole.metadata.Optional;
@@ -64,6 +65,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -322,7 +324,7 @@ public class Transducer extends AbstractLanguageAnalyser
     }
   }
   
-  public URL getGrammarURL() {
+  public ResourceReference getGrammarURL() {
     return grammarURL;
   }
 
@@ -332,14 +334,23 @@ public class Transducer extends AbstractLanguageAnalyser
       suffixes = ".jape",
       disjunction = "grammar",
       priority = 1)
-  public void setGrammarURL(URL source) {
+  public void setGrammarURL(ResourceReference source) {
     this.grammarURL = source;
+  }
+  
+  @Deprecated
+  public void setGrammarURL(URL source) {
+    try {
+      this.setGrammarURL(new ResourceReference(source));
+    } catch(URISyntaxException e) {
+      throw new RuntimeException("Error converting URL to ResourceReference",e);
+    }
   }
   
   /**
    * The source from which this transducer is created.
    */
-  protected URL grammarURL;
+  protected ResourceReference grammarURL;
   
   /**
    * List of class names for any custom
@@ -368,7 +379,7 @@ public class Transducer extends AbstractLanguageAnalyser
   /**
    * The URL to the serialised jape file used as grammar by this transducer.
    */
-  protected java.net.URL binaryGrammarURL;
+  protected ResourceReference binaryGrammarURL;
   
   
   /**
@@ -753,7 +764,7 @@ public class Transducer extends AbstractLanguageAnalyser
   protected void parseJape() 
     throws IOException, ParseException, ResourceInstantiationException
   {		
-    ParseCpsl parser = JapeFactory.newJapeParser(grammarURL, encoding);
+    ParseCpsl parser = JapeFactory.newJapeParser(grammarURL.toURL(), encoding);
     parser.setSptClass(SinglePhaseTransducerPDA.class);
 
     StatusListener listener = new StatusListener(){
@@ -866,7 +877,7 @@ public class Transducer extends AbstractLanguageAnalyser
     return annots;
   }
   
-  public java.net.URL getBinaryGrammarURL() {
+  public ResourceReference getBinaryGrammarURL() {
     return binaryGrammarURL;
   }
 
@@ -876,9 +887,18 @@ public class Transducer extends AbstractLanguageAnalyser
     disjunction = "grammar",
     priority = 100
   )
-  public void setBinaryGrammarURL(java.net.URL binaryGrammarURL) {
+  public void setBinaryGrammarURL(ResourceReference binaryGrammarURL) {
     this.binaryGrammarURL = binaryGrammarURL;
-  }  
+  } 
+  
+  @Deprecated
+  public void setBinaryGrammarURL(URL binaryGrammarURL) {
+    try {
+      this.setBinaryGrammarURL(new ResourceReference(binaryGrammarURL));
+    } catch(URISyntaxException e) {
+      throw new RuntimeException("Error converting URL to ResourceReference",e);
+    }
+  }
   
   /**
    * @return the inputASName
@@ -963,24 +983,5 @@ public class Transducer extends AbstractLanguageAnalyser
     actionContext.setCorpus(null);
     actionContext.setController(null);
     actionContext.setPR(null);
-  }
-
-  
-  /**
-   * This is testing code used during development.
-   * TODO: delete it!
-   */
-  public static void main(String[] args){
-    try {
-      Gate.init();
-      MainFrame.getInstance().setVisible(true);
-      Gate.getCreoleRegister().registerDirectories(new File(".").toURI().toURL());
-      File session = Gate.getUserSessionFile();
-      if(session == null) session = new File(System.getProperty("user.home") + 
-              ".gate.session");
-      if(session.exists()) PersistenceManager.loadObjectFromFile(session);
-    } catch(Exception e) {
-      e.printStackTrace();
-    }
   }
 }
