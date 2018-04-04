@@ -16,6 +16,9 @@
 	<groupId>uk.ac.gate.plugins</groupId>
 	<artifactId>jape-plus</artifactId>
 	<version>8.5-SNAPSHOT</version>
+	
+	<name>JAPE Plus</name>
+	<description>An alternative, usually more efficient and faster, JAPE implementation</description>
 
 	<licenses>
 		<license>
