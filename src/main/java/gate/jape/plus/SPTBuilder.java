@@ -84,6 +84,11 @@ public class SPTBuilder {
   protected List<String> annotationTypes;
   
   /**
+   * The SPT we are currenrly processing
+   */
+  protected SinglePhaseTransducer origSpt;
+  
+  /**
    * Stores the list of predicates for each annotation type.
    */
   protected Map<String, List<Predicate>> predicatesByType;
@@ -99,6 +104,7 @@ public class SPTBuilder {
     predicatesByType = new HashMap<String, List<Predicate>>();
     newStates = new ArrayList<SPTBase.State>();
     oldToNewStates = new OpenIntIntHashMap();
+    origSpt = oldSpt;
 
     rules = new Rule[oldSpt.getRules().size()];
     rules = ((List<Rule>) oldSpt.getRules()).toArray(rules);
@@ -176,6 +182,7 @@ public class SPTBuilder {
     oldToNewStates = null;
     predicatesByType = null;
     rules = null;
+    origSpt = null;
     
     return sptData;
   }
@@ -658,6 +665,15 @@ public class SPTBuilder {
           containedPredicates.add(convertPredicate(containedAnnType, pred));
         }
       }
+      if(origSpt.isInputRestricted()) {
+        if(!origSpt.input.contains(containedAnnType)) {
+          System.err.println(
+              (origSpt.getBaseURL() != null ? origSpt.getBaseURL() + ": " : "")
+                  + "unlisted annotation type '" + containedAnnType
+                  + "' is used on the RHS of a contains predicated in phase '"
+                  + origSpt.getName() + "'");
+        }
+      }
       int[] newPredValue = new int[2 + containedPredicates.size()];
       newPredValue[0] = annotationTypes.indexOf(containedAnnType);
       if(newPredValue[0] == -1) {
@@ -688,6 +704,15 @@ public class SPTBuilder {
         containedAnnType = constraint.getAnnotType();
         for(ConstraintPredicate pred : constraint.getAttributeSeq()) {
           containedPredicates.add(convertPredicate(containedAnnType, pred));
+        }
+      }
+      if(origSpt.isInputRestricted()) {
+        if(!origSpt.input.contains(containedAnnType)) {
+          System.err.println(
+              (origSpt.getBaseURL() != null ? origSpt.getBaseURL() + ": " : "")
+                  + "unlisted annotation type '" + containedAnnType
+                  + "' is used on the RHS of a within predicated in phase '"
+                  + origSpt.getName() + "'");
         }
       }
       int[] newPredValue = new int[2 + containedPredicates.size()];
